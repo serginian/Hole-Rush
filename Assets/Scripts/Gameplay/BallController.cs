@@ -1,5 +1,6 @@
 using System;
 using Audio;
+using Pooling;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -21,6 +22,9 @@ namespace Gameplay
         private const string MISS = "Miss";
 
         private Rigidbody _rigidbody;
+        // Object Pooling pattern
+        private ObjectPool<ShurikenPoolableObject> _hitPool;
+        private ObjectPool<ShurikenPoolableObject> _brakePool;
         
 
 
@@ -29,6 +33,8 @@ namespace Gameplay
         private void Awake()
         {
             _rigidbody = GetComponent<Rigidbody>();
+            _hitPool = new ObjectPool<ShurikenPoolableObject>(hitParticles, 3, 10);
+            _brakePool = new ObjectPool<ShurikenPoolableObject>(brakeParticles, 3, 10);
         }
         
         private void OnCollisionEnter(Collision other)
@@ -58,8 +64,11 @@ namespace Gameplay
         private void Hit(Collision collision)
         {
             AudioPlayer.PlaySound(HIT, AudioGroup.Gameplay);
-            //todo: to object pooling
-            Instantiate(hitParticles, collision.contacts[0].point, Quaternion.identity);
+            
+            var obj = _hitPool.Get();
+            obj.transform.position = collision.contacts[0].point;
+            obj.transform.rotation = Quaternion.LookRotation(collision.contacts[0].normal);
+            
             collision.gameObject.GetComponent<Hole>().Hit();
             Return();
         }
@@ -67,17 +76,22 @@ namespace Gameplay
         private void Brake(Collision collision)
         {
             AudioPlayer.PlaySound(MISS, AudioGroup.Gameplay);
-            //todo: to object pooling
-            Instantiate(brakeParticles, collision.contacts[0].point, Quaternion.identity);
+            
+            var obj = _brakePool.Get();
+            obj.transform.position = collision.contacts[0].point;
+            obj.transform.rotation = Quaternion.LookRotation(collision.contacts[0].normal);
+            
             Return();
         }
 
         private void Return()
         {
             sustainedParticles.Play();
+            
             _rigidbody.linearVelocity = Vector3.zero;
             _rigidbody.angularVelocity = Vector3.zero;
             _rigidbody.isKinematic = true;
+            
             transform.rotation = Quaternion.identity;
             OnBallReturned?.Invoke();
         }

@@ -20,6 +20,7 @@ namespace UI
         public static string CurrentContext { get; private set; } = String.Empty;
 
 
+        
         /********************** PUBLIC INTERFACE **********************/
 
         /// <summary>
@@ -96,6 +97,7 @@ namespace UI
             return await CreateWindow_Internal<T>(windowContext, parent);
         }
 
+        
 
         /********************** INNER LOGIC **********************/
 
@@ -138,5 +140,7 @@ namespace UI
                 LoadedWindows.Remove(windowType);
             }
         }
+        
+        
     } // end of class
 }

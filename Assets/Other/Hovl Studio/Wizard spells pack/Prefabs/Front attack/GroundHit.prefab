@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 4769534820309686}
   - component: {fileID: 198523390619517086}
   - component: {fileID: 199434582047858462}
+  - component: {fileID: -5997708673925476752}
   m_Layer: 0
   m_Name: GroundHit
   m_TagString: Untagged
@@ -4919,6 +4920,18 @@ ParticleSystemRenderer:
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
   m_MaskInteraction: 0
+--- !u!114 &-5997708673925476752
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1089419776814332}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 388cde42590bf44379844a67041abe2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1148031887860504
 GameObject:
   m_ObjectHideFlags: 0
