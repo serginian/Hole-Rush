@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 3952629857538863816}
   - component: {fileID: 5424842574861125066}
   m_Layer: 0
-  m_Name: Hole
+  m_Name: Sneaky Hole
   m_TagString: Hole
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

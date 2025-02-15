@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -5,26 +6,28 @@ namespace Gameplay
 {
     public class PlayerController : MonoBehaviour, IInitializable
     {
-        [Header("Settings")] public float maxJaw = 16;
+        [Header("Settings")] 
+        public float maxJaw = 16;
         public float minJaw = -16;
         public float maxPitch = 16;
         public float minPitch = -6;
         public float launchForce = 10f;
 
         [Header("References")] 
-        [SerializeField]
-        private TrajectoryDrawer trajectory;
-
-        [Header("Resources")] 
-        [SerializeField] private GameObject ballPrefab;
+        [SerializeField] private TrajectoryDrawer trajectoryVisualisation;
+        [SerializeField] private BallController ballController;
+        [SerializeField] private Camera mainCamera;
 
         [Header("Input")] 
         [SerializeField] InputActionReference fireAction;
         [SerializeField] InputActionReference rotateAction;
 
+        private bool IsAiming => trajectoryVisualisation.IsDrawing; // decouple if more performance is needed
+        
+        private LazyFollowCamera _lazyFollowCamera;
         private Vector2 _aimDirection = Vector2.zero;
+        private bool _ballIsReady = true;
         private bool _missionStarted;
-        private bool _isAiming;
 
 
 
@@ -41,6 +44,17 @@ namespace Gameplay
 
 
         /********************** GAMEPLAY EVENTS **********************/
+
+        private void Awake()
+        {
+            _lazyFollowCamera = mainCamera.GetComponent<LazyFollowCamera>();
+        }
+
+        private void Start()
+        {
+            ballController.OnBallReturned += OnBallReturned;
+        }
+
         private void OnMissionStarted()
         {
             _missionStarted = true;
@@ -52,7 +66,7 @@ namespace Gameplay
         private void OnMissionEnded()
         {
             _missionStarted = false;
-            trajectory.StopDrawing();
+            trajectoryVisualisation.StopDrawing();
             fireAction.action.started -= OnFireStarted;
             rotateAction.action.performed -= OnRotate;
         }
@@ -69,31 +83,34 @@ namespace Gameplay
                 OnMissionEnded();
         }
 
+        
 
         /********************** INPUT EVENTS **********************/
 
         private void OnFireStarted(InputAction.CallbackContext context)
         {
-            if (_isAiming)
+            if (IsAiming || !_ballIsReady)
                 return;
 
-            _isAiming = true;
-            trajectory.StartDrawing(launchForce);
+            trajectoryVisualisation.StartDrawing(launchForce);
         }
 
         private void OnFireReleased(InputAction.CallbackContext context)
         {
-            if (!_isAiming)
+            if (!IsAiming)
                 return;
 
-            _isAiming = false;
-            trajectory.StopDrawing();
             ThrowBall();
+            
+            _aimDirection = Vector2.zero;
+            _lazyFollowCamera.FollowDirection(_aimDirection);
+            trajectoryVisualisation.UpdateDirection(_aimDirection);
+            trajectoryVisualisation.StopDrawing();
         }
 
         private void OnRotate(InputAction.CallbackContext context)
         {
-            if (!_isAiming)
+            if (!IsAiming)
                 return;
 
             Vector2 input = context.ReadValue<Vector2>();
@@ -102,25 +119,27 @@ namespace Gameplay
                 x = Mathf.Clamp(_aimDirection.x + input.x, -maxJaw, maxJaw),
                 y = Mathf.Clamp(_aimDirection.y + input.y, -maxPitch, maxPitch)
             };
-
-            trajectory.UpdateDirection(_aimDirection);
+            _lazyFollowCamera.FollowDirection(_aimDirection);
+            trajectoryVisualisation.UpdateDirection(_aimDirection);
         }
 
 
 
         /********************** INNER LOGIC **********************/
+        
         private void ThrowBall()
         {
-            StopAllCoroutines();
-            if (ballPrefab == null) return;
-            GameObject ball = Instantiate(ballPrefab, transform.position, Quaternion.identity);
-            Rigidbody rb = ball.GetComponent<Rigidbody>();
-            if (rb != null)
-            {
-                Vector3 launchDirection = Quaternion.Euler(-_aimDirection.y, _aimDirection.x, 0) * Vector3.forward;
-                rb.linearVelocity = launchDirection * launchForce;
-            }
+            Vector3 launchDirection = Quaternion.Euler(-_aimDirection.y, _aimDirection.x, 0) * Vector3.forward;
+            ballController.Throw(launchDirection, launchForce);
+            _ballIsReady = false;
         }
 
+        private void OnBallReturned()
+        {
+            ballController.transform.localPosition = Vector3.zero;
+            _ballIsReady = true;
+        }
+
+        
     } // end of class
 }

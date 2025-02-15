@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cecec84e785394b8091ad9687e6fdcad, type: 3}
   m_Name: Main Window Animation
   m_EditorClassIdentifier: 
-  animationDuration: 0.4
-  scaleMin: 0.6
+  animationDuration: 0.3
+  scaleMin: 0
   scaleMax: 1
   scaleEase: 13
-  fadeEase: 28
+  fadeEase: 25
